@@ -32,6 +32,17 @@ class Board:
             return self.cells[row][col]
         except IndexError:
             return None
+        
+    # Returns neighboring cells.
+    def _neighbors(self, cell):
+        neighbors = []
+        for x in var:
+            for y in var:
+
+                # Ensures that the neighbor is adjacent, not diagonal.
+                if abs(x - y) == 1:
+                    neighbors.append(self._cells(cell.row + x, cell.col + y))
+        return neighbors
     
     # When a completely empty cell is revealed, the other surrounding completely empty cells shoud be revealed too.
     def _floodFill(self, cell0):
@@ -42,16 +53,18 @@ class Board:
             if cell0.adjacentMines == 0:
 
                 # For cells up, down, left, and right from the cell, it repeats the floodFill.
-                for cell1 in [self._cells(cell0.row, cell0.col - 1),
-                              self._cells(cell0.row, cell0.col + 1), 
-                              self._cells(cell0.row - 1, cell0.col), 
-                              self._cells(cell0.row + 1, cell0.col)]:
+                for cell1 in self._neighbors(cell0):
                     if (cell1 is not None) and (not cell1.isRevealed):
                         self._floodFill(cell1)
 
-    # The first reveal works differently as the code must ensure that the reveal lands on a completely empty square.
-    def initialReveal(self, cell0):
+    # Returns unrevealed status for the cell. If the cell is None, returns False.
+    def _getUnrevealedStatus(self, cell):
+        if cell is None:
+            return False
+        return not cell.isRevealed
 
+    # The first reveal works differently as the code must ensure that the reveal lands on a completely empty square. Then, updates borders for the whole board.
+    def initialReveal(self, cell0):
 
         # Creates mines until the quota of mines has been met.
         i = 0
@@ -83,18 +96,29 @@ class Board:
                                 adjacentMines += 1
                     cell1.fill(False, adjacentMines)
         self._floodFill(cell0)
+
+        # Updates borders for the whole board.
+        for row in self.cells:
+            for cell1 in row:
+                cell1.updateBorders([self._getUnrevealedStatus(cell2) for cell2 in self._neighbors(cell1)])
     
-    # Reveals the cell. Flood fills if completely empty. Returns True if a mine is revealed, False otherwise.
-    def reveal(self, cell):
+    # Reveals the cell. Flood fills if completely empty. Updates all neighboring borders. Returns True if a mine is revealed, False otherwise.
+    def reveal(self, cell0):
 
         # Flood fill
-        if cell.adjacentMines == 0:
-            self._floodFill(cell)
+        if cell0.adjacentMines == 0:
+            self._floodFill(cell0)
         else:
-            cell.reveal()
+            cell0.reveal()
+
+        # Updates all neighboring borders.
+        toUpdate = self._neighbors(cell0) # Defines cells that need to have their borders updated.
+        toUpdate.append(cell0)
+        for cell1 in toUpdate:
+            cell1.updateBorders([self._getUnrevealedStatus(cell2) for cell2 in self._neighbors(cell1)])
 
         # Return statement for game over if a mine is revealed.
-        return cell.isMine
+        return cell0.isMine
     
     # Flags the cell.
     def flag(self, cell):

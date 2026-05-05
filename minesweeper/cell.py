@@ -24,6 +24,8 @@ class Cell:
         self.isMine = False
         self.isRevealed = False
         self.isFlagged = False
+        self.isHighlighted = False
+        self.neighborsUnrevealed = [False, False, False, False] # up, right, down, left
         self.adjacentMines = 0
         self.drawn = []
         self.x = self.col * self.size
@@ -36,6 +38,11 @@ class Cell:
         else:
             self.colorUnrevealed = color_rgb(162, 209, 73)
             self.colorRevealed = color_rgb(215, 184, 153)
+
+        # Creates different colors for highlighting the cell when the mouse is hovering over it.
+        self.colorUnrevealedHighlight = color_rgb(191, 225, 125)
+        self.colorRevealedHighlight = color_rgb(236, 209, 183)
+        self.colorBorders = color_rgb(135, 175, 58)
         self._draw()
 
     # Changes isMine and adjacentMines. To be called after first cell is revealed.
@@ -74,19 +81,41 @@ class Cell:
 
             # Revealed box
             else:
-                box.setFill(self.colorRevealed)
+
+                # Highlights the cell if it has adjacent mines.
+                if self.isHighlighted and self.adjacentMines > 0:
+                    box.setFill(self.colorRevealedHighlight)
+                else:
+                    box.setFill(self.colorRevealed)
 
                 # Draws the number for adjacent mines.
                 if self.adjacentMines > 0:
                     number = Text(Point(self.x + self.size / 2, self.y + self.size / 2), str(self.adjacentMines))
-                    number.setFill(adjacentMineColors[self.adjacentMines])
+                    number.setOutline(adjacentMineColors[self.adjacentMines])
                     number.setSize(min(36, max(5, self.size // 2)))
                     number.setStyle("bold")
                     self._objDraw(number)
 
+                    # Creates a border around the cell if it is next to an unrevealed cell.
+                    borders = [Line(Point(self.x, self.y), Point(self.x + self.size, self.y)),                         # up
+                               Line(Point(self.x + self.size, self.y), Point(self.x + self.size, self.y + self.size)), # right
+                               Line(Point(self.x, self.y + self.size), Point(self.x + self.size, self.y + self.size)), # down
+                               Line(Point(self.x, self.y), Point(self.x, self.y + self.size))]                         # left
+                    for i in range(4):
+                        if self.neighborsUnrevealed[i]:
+                            border = borders[i]
+                            border.setFill(self.colorBorders)
+                            border.setWidth(3)
+                            self._objDraw(border)
+                                
         # Unrevealed box        
         else:
-            box.setFill(self.colorUnrevealed)
+
+            # Highlights the cell.
+            if self.isHighlighted:
+                box.setFill(self.colorUnrevealedHighlight)
+            else:
+                box.setFill(self.colorUnrevealed)
 
             # Draws the flag.
             if self.isFlagged:
@@ -112,6 +141,21 @@ class Cell:
         if not self.isRevealed:
             self.isFlagged = not self.isFlagged
             self._draw()
+
+    # Highlights the cell when the mouse is hovering over it.
+    def highlight(self):
+        self.isHighlighted = True
+        self._draw()
+
+    # Unhighlights the cell when the mouse is not hovering over it.
+    def unhighlight(self):
+        self.isHighlighted = False
+        self._draw()
+
+    # Updates neighborsUnrevealed.
+    def updateBorders(self, neighbors):
+        self.neighborsUnrevealed = neighbors
+        self._draw()
 
     # Checks if mouse cursor is in the cell.
     def containsClick(self, point):
