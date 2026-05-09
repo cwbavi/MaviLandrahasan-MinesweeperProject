@@ -154,3 +154,27 @@ class Board:
 
         # If all non-mine cells are revealed, the board is solved.
         return True
+    
+    # Returns the neighboring cells of the cell at the row and col.
+    def _neighbors(self, row, col):
+        neighbors = []
+        for x in var:
+            for y in var:
+                # Ensures that the neighbor is adjacent, not diagonal.
+                if abs(x - y) == 1:
+                    neighbors.append(self._cells(row + x, col + y))
+        return neighbors
+
+    # String representation of the board. Mines are represented by M and non-mine cells are represented by their number of adjacent mines.
+    def __str__(self):
+        string = ""
+        for row in self.cells:
+            for cell in row:
+                if cell.isMine:
+                    string += "M "
+                else:
+                    string += str(cell.adjacentMines) + " "
+            string += "\n"
+        return string
+    def __repr__(self):
+        return self.__str__()
