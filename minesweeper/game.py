@@ -1,20 +1,17 @@
 from board import *
 from graphics import *
 
-#Window size for the game
+# Window size for the game
 window_size = 600
 window_height = window_size + 60
 
-#Difficulty settings for the game
-difficulties = {
-    "easy": (8, 8, 10),
-    "medium": (16, 16, 40),
-    "hard": (16, 30, 99)
-}
+# Difficulty settings for the game. Easy = index 0, Medium = index 1, Hard = index 2
+difficulties = [[8, 8, 10], [16, 16, 40], [16, 30, 99]]
 
-#Main game class that handles the game logic and user interface
+# Main game class that handles the game logic and user interface
 class Game:
-    #Initialize the game with the selected difficulty level and set up the board and window
+
+    # Initialize the game with the selected difficulty level and set up the board and window
     def __init__(self, difficulty):
         self.rows, self.cols, self.mines = difficulties[difficulty]
         self.window = GraphWin("Minesweeper", window_size, window_height)
@@ -23,7 +20,7 @@ class Game:
         self.isOver = False
         self.flagged_cells = 0
 
-        self.win = graphWin("Minesweeper", window_size, window_size)
+        self.win = GraphWin("Minesweeper", window_size, window_size)
         self.win.setBackground(color_rgb(50, 50, 50))
 
         self.board = Board(self.rows, self.cols, self.mines, self.win, self.cell_size)
